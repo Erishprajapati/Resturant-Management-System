@@ -18,17 +18,21 @@ class Table(models.Model):
     is_available = models.BooleanField(default=False)
     
 class Order(models.Model):
-    STATUS_CHOICE = [
-        ('P', "PENDING"),
-        ('C', "COMPLETED"),
-    ]
+    PENDING = 'P'
+    COMPLETED = 'C'
+    STATUS_CHOICE = {
+        PENDING : "Pending",
+        COMPLETED : "Completed",
+    }
     user_id = models.ForeignKey(User,on_delete = models.CASCADE)
     table_id = models.ForeignKey(Table, on_delete=models.CASCADE)
-    total_price = models.FloatField()
-    status = models.CharField(max_length=10, choices = STATUS_CHOICE)
+    total_price = models.FloatField(null = True,blank = True)
+    status = models.CharField(max_length=10, choices = STATUS_CHOICE,default = 'P')
+    payment = models.BooleanField(default=False)
     quantity = models.IntegerField(default=1)
     
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     foods = models.ForeignKey(Food, on_delete=models.PROTECT)
     
+
