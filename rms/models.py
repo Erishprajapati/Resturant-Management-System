@@ -18,10 +18,17 @@ class Table(models.Model):
     is_available = models.BooleanField(default=False)
     
 class Order(models.Model):
+    STATUS_CHOICE = [
+        ('P', "PENDING"),
+        ('C', "COMPLETED"),
+    ]
     user_id = models.ForeignKey(User,on_delete = models.CASCADE)
     table_id = models.ForeignKey(Table, on_delete=models.CASCADE)
+    total_price = models.FloatField()
+    status = models.CharField(max_length=10, choices = STATUS_CHOICE)
     quantity = models.IntegerField(default=1)
     
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     foods = models.ForeignKey(Food, on_delete=models.PROTECT)
+    
