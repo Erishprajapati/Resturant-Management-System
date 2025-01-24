@@ -6,6 +6,8 @@ User = get_user_model()
 # Create your models here.
 class Category(models.Model):
     name = models.CharField(max_length=15)
+    def __str__(self):
+        return self.name 
     
 class Food(models.Model):
     name = models.CharField( max_length=50)
@@ -35,4 +37,3 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     foods = models.ForeignKey(Food, on_delete=models.PROTECT)
     
-
