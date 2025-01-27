@@ -10,7 +10,6 @@ class Food(admin.ModelAdmin):
     list_filter = ('name',)
     readonly_fields = ['id','name']
     
-    
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 1
@@ -31,7 +30,6 @@ class Category(admin.ModelAdmin):
     list_display = ['name']
     # list_editable = ['name']
     
-
 @admin.register(Table)
 class Table(admin.ModelAdmin):
     list_display = ['number','is_available']
