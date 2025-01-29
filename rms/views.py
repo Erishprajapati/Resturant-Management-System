@@ -37,9 +37,12 @@ from .serializers import CategorySerializer
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.serializers import ValidationError
+from .serializers import CategorySerializer
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
-#Create your views here.
-@api_view(['GET','POST'])
+
+@api_view(['GET','POST']) #Create your views here.
 def category_list(request):
    if request.method == 'GET':
       category = Category.objects.all()
@@ -52,30 +55,50 @@ def category_list(request):
       return Response({"details":"Data has been created"},status=status.HTTP_201_CREATED)
  
 
-@api_view(['GET','DELETE', 'PUT'])
-def category_details(request,pk):
-   try:
-      category = Category.objects.get(pk=pk)
-   except Category.DoesNotExist:
-      return Response({"details":"Category does not exist"},status=status.HTTP_404_NOT_FOUND)
+# @api_view(['GET','DELETE', 'PUT'])
+# def category_details(request,pk):
+#    try:
+#       category = Category.objects.get(pk=pk)
+#    except Category.DoesNotExist:
+#       return Response({"details":"Category does not exist"},status=status.HTTP_404_NOT_FOUND)
    
-   if request.method == "GET":
-      serializer = CategorySerializer(category)
+#    if request.method == "GET":
+#       serializer = CategorySerializer(category)
+#       return Response(serializer.data)
+   
+#    elif request.method == "PUT": #handling updates in the foods
+#       serializer = CategorySerializer(category, data=request.data)
+#       if serializer.is_valid():
+#          serializer.save()
+#          return Response({"Details": "Category updated successfully", "data" :serializer.data}) #the message are sent in key and value pairs
+#       #what if the error are founf and category cannot be updated then 
+#       return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST) #the error)
+#    elif request.method == "DELETE":
+#       items = OrderItem.objects.filter(foods__category=category).count()
+#       if items > 0:
+#          raise ValidationError({"Details": "items are left in this category."})
+#       else:
+#          category.delete()
+#          return Response({"Details" : "Category deleted successfully."})
+      
+class CategoryDetailAPIView(APIView):
+   def get(self,request,pk):
+      category = get_object_or_404(Category, pk = pk) #if object is found then display otherwise show the error of 404 and primary key = primary key which user sends
+      serializer = CategorySerializer(category) #convert the complex data into json format or readable format
       return Response(serializer.data)
    
-   elif request.method == "PUT": #handling updates in the foods
-      serializer = CategorySerializer(category, data=request.data)
+   def put(self,request,pk):
+      category = get_object_or_404(Category, pk = pk) 
+      serializer = CategorySerializer(category, data = request.data)
       if serializer.is_valid():
          serializer.save()
-         return Response({"Details": "Category updated successfully", "data" :serializer.data}) #the message are sent in key and value pairs
-      #what if the error are founf and category cannot be updated then 
-      return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST) #the error)
-   elif request.method == "DELETE":
-      items = OrderItem.objects.filter(foods__category=category).count()
+         return Response({"Details" : "Category updated successfully"})
+      return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+                      
+   def delete(self,request,pk):
+      category = get_object_or_404(Category, pk = pk)
+      items = Order.objects.filter(foods__category=category).count()
       if items > 0:
-         raise ValidationError({"Details": "items are left in this category."})
-      else:
-         category.delete()
-         return Response({"Details" : "Category deleted successfully."})
-      
-   
+         raise ValidationError({"Details" : "Items are left in this category"})
+      category.delete()
+      return Response({"Details": "Category deleted successfully"})
