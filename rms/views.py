@@ -40,19 +40,19 @@ from rest_framework.serializers import ValidationError
 from .serializers import CategorySerializer
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from rest_framework import generics
 
-
-@api_view(['GET','POST']) #Create your views here.
-def category_list(request):
-   if request.method == 'GET':
-      category = Category.objects.all()
-      serializer = CategorySerializer(category,many = True)
-      return Response(serializer.data)
-   else: #here is two method working get and post means read and create the data
-      serializer = CategorySerializer(data = request.data)
-      serializer.is_valid(raise_exception = True)
-      serializer.save()
-      return Response({"details":"Data has been created"},status=status.HTTP_201_CREATED)
+# @api_view(['GET','POST']) #Create your views here.
+# def category_list(request):
+#    if request.method == 'GET':
+#       category = Category.objects.all()
+#       serializer = CategorySerializer(category,many = True)
+#       return Response(serializer.data)
+#    else: #here is two method working get and post means read and create the data
+#       serializer = CategorySerializer(data = request.data)
+#       serializer.is_valid(raise_exception = True)
+#       serializer.save()
+#       return Response({"details":"Data has been created"},status=status.HTTP_201_CREATED)
  
 
 # @api_view(['GET','DELETE', 'PUT'])
@@ -81,24 +81,47 @@ def category_list(request):
 #          category.delete()
 #          return Response({"Details" : "Category deleted successfully."})
       
-class CategoryDetailAPIView(APIView):
-   def get(self,request,pk):
-      category = get_object_or_404(Category, pk = pk) #if object is found then display otherwise show the error of 404 and primary key = primary key which user sends
-      serializer = CategorySerializer(category) #convert the complex data into json format or readable format
-      return Response(serializer.data)
+# class CategoryDetailAPIView(APIView):
+#    def get(self,request,pk):
+#       category = get_object_or_404(Category, pk = pk) #if object is found then display otherwise show the error of 404 and primary key = primary key which user sends
+#       serializer = CategorySerializer(category) #convert the complex data into json format or readable format
+#       return Response(serializer.data)
+class CategoryListCreateAPIView(generics.ListCreateAPIView):
+   queryset = Category.objects.all()
+   serializer_class = CategorySerializer
    
-   def put(self,request,pk):
-      category = get_object_or_404(Category, pk = pk) 
-      serializer = CategorySerializer(category, data = request.data)
-      if serializer.is_valid():
-         serializer.save()
-         return Response({"Details" : "Category updated successfully"})
-      return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+class CategoryListDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    def delete(self, request, *args, **kwargs):
+        category = self.get_object()
+        items = OrderItem.objects.filter(foods__category=category).count()
+
+        if items > 0:
+            raise ValidationError({"Details": "Items are unable to delete"})
+
+        response = super().delete(request, *args, **kwargs)
+        return Response({"message": "Category deleted successfully!"})
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        return Response({
+            "message": "Category updated successfully!",
+            "data": response.data
+        })
+   # def put(self,request,pk):
+   #    category = get_object_or_404(Category, pk = pk) 
+   #    serializer = CategorySerializer(category, data = request.data)
+   #    if serializer.is_valid():
+   #       serializer.save()
+   #       return Response({"Details" : "Category updated successfully"})
+   #    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
                       
-   def delete(self,request,pk):
-      category = get_object_or_404(Category, pk = pk)
-      items = Order.objects.filter(foods__category=category).count()
-      if items > 0:
-         raise ValidationError({"Details" : "Items are left in this category"})
-      category.delete()
-      return Response({"Details": "Category deleted successfully"})
+   # def delete(self,request,pk):
+   #    category = get_object_or_404(Category, pk = pk)
+   #    items = Order.objects.filter(foods__category=category).count()
+   #    if items > 0:
+   #       raise ValidationError({"Details" : "Items are left in this category"})
+   #    category.delete()
+   #    return Response({"Details": "Category deleted successfully"})
